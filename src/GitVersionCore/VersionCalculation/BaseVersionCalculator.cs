@@ -10,9 +10,12 @@ namespace GitVersion.VersionCalculation
     {
         readonly BaseVersionStrategy[] strategies;
 
+        private FallbackBaseVersionStrategy DefaultStrategy { get; set; }
+
         public BaseVersionCalculator(params BaseVersionStrategy[] strategies)
         {
             this.strategies = strategies;
+            DefaultStrategy = new FallbackBaseVersionStrategy();
         }
 
         public BaseVersion GetBaseVersion(GitVersionContext context)
@@ -45,6 +48,36 @@ namespace GitVersion.VersionCalculation
                         Version = v
                     })
                     .ToList();
+
+                if(!baseVersions.Any())
+                {
+                    var defaultBaseVersions = DefaultStrategy.GetVersions(context)
+                        .Where(v =>
+                        {
+                            if (v == null) return false;
+
+                            Logger.WriteInfo(v.ToString());
+
+                            foreach (var filter in context.Configuration.VersionFilters)
+                            {
+                                string reason;
+                                if (filter.Exclude(v, out reason))
+                                {
+                                    Logger.WriteInfo(reason);
+                                    return false;
+                                }
+                            }
+
+                            return true;
+                        })
+                        .Select(v => new Versions
+                        {
+                            IncrementedVersion = MaybeIncrement(context, v),
+                            Version = v
+                        })
+                        .ToList();
+                    baseVersions.AddRange(defaultBaseVersions);
+                }
 
                 FixTheBaseVersionSourceOfMergeMessageStrategyIfReleaseBranchWasMergedAndDeleted
                     (context, baseVersions);

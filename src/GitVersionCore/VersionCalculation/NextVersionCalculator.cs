@@ -1,4 +1,4 @@
-﻿namespace GitVersion.VersionCalculation
+namespace GitVersion.VersionCalculation
 {
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -14,7 +14,7 @@
             this.metaDataCalculator = metaDataCalculator ?? new MetaDataCalculator();
             baseVersionFinder = baseVersionCalculator ??
                 new BaseVersionCalculator(
-                    new FallbackBaseVersionStrategy(),
+                    //new FallbackBaseVersionStrategy(),
                     new ConfigNextVersionBaseVersionStrategy(),
                     new TaggedCommitVersionStrategy(),
                     new MergeMessageBaseVersionStrategy(),
